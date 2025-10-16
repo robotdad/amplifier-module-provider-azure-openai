@@ -9,6 +9,7 @@ authors = [
     { name = "Microsoft MADE:Explorations Team" },
 ]
 dependencies = [
+    "azure-identity>=1.25.1",
     "openai>=1.0.0",
 ]
 
