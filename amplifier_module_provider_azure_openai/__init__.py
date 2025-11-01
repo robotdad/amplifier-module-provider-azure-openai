@@ -4,6 +4,7 @@ Integrates with Azure OpenAI Service using Responses API.
 """
 
 import asyncio
+import json
 import logging
 import os
 import time
@@ -596,20 +597,32 @@ class AzureOpenAIProvider:
                     if reasoning_text:
                         content_blocks.append(ThinkingContent(text=reasoning_text, raw=block))
 
-                elif block_type == "function_call" or block_type == "tool_call":
-                    # Azure uses function_call, align to tool_call
+                elif block_type in {"function_call", "tool_call"}:
+                    arguments = getattr(block, "input", None)
+                    if arguments is None and hasattr(block, "arguments"):
+                        arguments = getattr(block, "arguments")
+                    if isinstance(arguments, str):
+                        try:
+                            arguments = json.loads(arguments)
+                        except json.JSONDecodeError:
+                            logger.debug("Failed to decode tool call arguments: %s", arguments)
+                    if arguments is None:
+                        arguments = {}
+
+                    call_id = getattr(block, "call_id", "") or getattr(block, "id", "")
+                    tool_name = getattr(block, "name", "")
                     tool_calls.append(
                         ToolCall(
-                            tool=getattr(block, "name", ""),
-                            arguments=getattr(block, "input", {}),
-                            id=getattr(block, "call_id", "") or getattr(block, "id", ""),
+                            tool=tool_name,
+                            arguments=arguments,
+                            id=call_id,
                         )
                     )
                     content_blocks.append(
                         ToolCallContent(
-                            id=getattr(block, "call_id", "") or getattr(block, "id", ""),
-                            name=getattr(block, "name", ""),
-                            arguments=getattr(block, "input", {}),
+                            id=call_id,
+                            name=tool_name,
+                            arguments=arguments,
                             raw=block,
                         )
                     )
@@ -634,19 +647,32 @@ class AzureOpenAIProvider:
                     if reasoning_text:
                         content_blocks.append(ThinkingContent(text=reasoning_text, raw=block))
 
-                elif block_type == "function_call" or block_type == "tool_call":
+                elif block_type in {"function_call", "tool_call"}:
+                    arguments = block.get("input")
+                    if arguments is None:
+                        arguments = block.get("arguments", {})
+                    if isinstance(arguments, str):
+                        try:
+                            arguments = json.loads(arguments)
+                        except json.JSONDecodeError:
+                            logger.debug("Failed to decode tool call arguments: %s", arguments)
+                    if arguments is None:
+                        arguments = {}
+
+                    call_id = block.get("call_id", "") or block.get("id", "")
+                    tool_name = block.get("name", "")
                     tool_calls.append(
                         ToolCall(
-                            tool=block.get("name", ""),
-                            arguments=block.get("input", {}),
-                            id=block.get("call_id", "") or block.get("id", ""),
+                            tool=tool_name,
+                            arguments=arguments,
+                            id=call_id,
                         )
                     )
                     content_blocks.append(
                         ToolCallContent(
-                            id=block.get("call_id", "") or block.get("id", ""),
-                            name=block.get("name", ""),
-                            arguments=block.get("input", {}),
+                            id=call_id,
+                            name=tool_name,
+                            arguments=arguments,
                             raw=block,
                         )
                     )
@@ -724,10 +750,19 @@ class AzureOpenAIProvider:
                     reasoning_text = getattr(block, "text", "")
                     content_blocks.append(ThinkingBlock(thinking=reasoning_text, signature=None))
 
-                elif block_type == "function_call" or block_type == "tool_call":
+                elif block_type in {"function_call", "tool_call"}:
                     call_id = getattr(block, "call_id", "") or getattr(block, "id", "")
                     name = getattr(block, "name", "")
-                    input_data = getattr(block, "input", {})
+                    input_data = getattr(block, "input", None)
+                    if input_data is None and hasattr(block, "arguments"):
+                        input_data = getattr(block, "arguments")
+                    if isinstance(input_data, str):
+                        try:
+                            input_data = json.loads(input_data)
+                        except json.JSONDecodeError:
+                            logger.debug("Failed to decode tool call arguments: %s", input_data)
+                    if input_data is None:
+                        input_data = {}
                     content_blocks.append(ToolCallBlock(id=call_id, name=name, input=input_data))
                     tool_calls.append(ToolCall(id=call_id, name=name, arguments=input_data))
 
