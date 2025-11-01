@@ -600,13 +600,16 @@ class AzureOpenAIProvider:
                 elif block_type in {"function_call", "tool_call"}:
                     arguments = getattr(block, "input", None)
                     if arguments is None and hasattr(block, "arguments"):
-                        arguments = getattr(block, "arguments")
+                        arguments = block.arguments
                     if isinstance(arguments, str):
                         try:
                             arguments = json.loads(arguments)
                         except json.JSONDecodeError:
                             logger.debug("Failed to decode tool call arguments: %s", arguments)
                     if arguments is None:
+                        arguments = {}
+                    # Ensure arguments is dict for type safety
+                    if not isinstance(arguments, dict):
                         arguments = {}
 
                     call_id = getattr(block, "call_id", "") or getattr(block, "id", "")
@@ -657,6 +660,9 @@ class AzureOpenAIProvider:
                         except json.JSONDecodeError:
                             logger.debug("Failed to decode tool call arguments: %s", arguments)
                     if arguments is None:
+                        arguments = {}
+                    # Ensure arguments is dict for type safety
+                    if not isinstance(arguments, dict):
                         arguments = {}
 
                     call_id = block.get("call_id", "") or block.get("id", "")
@@ -755,13 +761,16 @@ class AzureOpenAIProvider:
                     name = getattr(block, "name", "")
                     input_data = getattr(block, "input", None)
                     if input_data is None and hasattr(block, "arguments"):
-                        input_data = getattr(block, "arguments")
+                        input_data = block.arguments
                     if isinstance(input_data, str):
                         try:
                             input_data = json.loads(input_data)
                         except json.JSONDecodeError:
                             logger.debug("Failed to decode tool call arguments: %s", input_data)
                     if input_data is None:
+                        input_data = {}
+                    # Ensure input_data is dict for type safety
+                    if not isinstance(input_data, dict):
                         input_data = {}
                     content_blocks.append(ToolCallBlock(id=call_id, name=name, input=input_data))
                     tool_calls.append(ToolCall(id=call_id, name=name, arguments=input_data))
