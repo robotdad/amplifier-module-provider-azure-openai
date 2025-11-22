@@ -141,7 +141,7 @@ class AzureOpenAIProvider(OpenAIProvider):
         self._auth_mode = "api_key" if api_key else "token_provider"
 
         # Azure deployments commonly use "default_deployment" config keys
-        self.default_model = self.config.get("default_model") or self.config.get("default_deployment", "gpt-5")
+        self.default_model = self.config.get("default_model") or self.config.get("default_deployment", "gpt-5.1")
 
         logger.debug(
             "AzureOpenAIProvider configured (auth=%s, default_model=%s, base_url=%s)",
