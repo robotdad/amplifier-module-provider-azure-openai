@@ -12,7 +12,9 @@ from collections.abc import Awaitable
 from collections.abc import Callable
 from typing import Any
 
+from amplifier_core import ModelInfo
 from amplifier_core import ModuleCoordinator
+from amplifier_core import ProviderInfo
 from amplifier_module_provider_openai import OpenAIProvider
 from openai import AsyncOpenAI
 
@@ -149,6 +151,30 @@ class AzureOpenAIProvider(OpenAIProvider):
             self.default_model,
             base_url,
         )
+
+    def get_info(self) -> ProviderInfo:
+        """Get provider metadata."""
+        return ProviderInfo(
+            id="azure-openai",
+            display_name="Azure OpenAI",
+            credential_env_vars=["AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT"],
+            capabilities=["streaming", "tools", "vision", "reasoning", "batch", "json_mode"],
+            defaults={
+                "model": "gpt-5.1",
+                "max_tokens": 16384,
+                "temperature": None,
+                "timeout": 300.0,
+            },
+        )
+
+    async def list_models(self) -> list[ModelInfo]:
+        """
+        List available Azure OpenAI models.
+
+        Returns empty list since Azure deployments are customer-specific.
+        User should specify model/deployment name directly.
+        """
+        return []
 
 
 def _get_bool(config: dict[str, Any], key: str, env_value: str | None) -> bool:
