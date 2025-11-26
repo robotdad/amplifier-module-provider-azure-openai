@@ -12,6 +12,7 @@ from collections.abc import Awaitable
 from collections.abc import Callable
 from typing import Any
 
+from amplifier_core import ConfigField
 from amplifier_core import ModelInfo
 from amplifier_core import ModuleCoordinator
 from amplifier_core import ProviderInfo
@@ -165,6 +166,57 @@ class AzureOpenAIProvider(OpenAIProvider):
                 "temperature": None,
                 "timeout": 300.0,
             },
+            config_fields=[
+                ConfigField(
+                    id="azure_endpoint",
+                    display_name="Azure Endpoint",
+                    field_type="text",
+                    prompt="Enter your Azure OpenAI endpoint URL",
+                    env_var="AZURE_OPENAI_ENDPOINT",
+                ),
+                ConfigField(
+                    id="api_key",
+                    display_name="API Key",
+                    field_type="secret",
+                    prompt="Enter your Azure OpenAI API key (or leave empty for managed identity)",
+                    env_var="AZURE_OPENAI_API_KEY",
+                    required=False,
+                ),
+                ConfigField(
+                    id="api_version",
+                    display_name="API Version",
+                    field_type="text",
+                    prompt="Enter API version",
+                    env_var="AZURE_OPENAI_API_VERSION",
+                    default="2024-10-01-preview",
+                    required=False,
+                ),
+                ConfigField(
+                    id="use_managed_identity",
+                    display_name="Use Managed Identity",
+                    field_type="boolean",
+                    prompt="Use Azure Managed Identity for authentication?",
+                    env_var="AZURE_USE_MANAGED_IDENTITY",
+                    default="false",
+                    required=False,
+                ),
+                ConfigField(
+                    id="managed_identity_client_id",
+                    display_name="Managed Identity Client ID",
+                    field_type="text",
+                    prompt="Enter Managed Identity Client ID (for user-assigned identity)",
+                    env_var="AZURE_MANAGED_IDENTITY_CLIENT_ID",
+                    required=False,
+                    show_when={"use_managed_identity": "true"},
+                ),
+                ConfigField(
+                    id="deployment_name",
+                    display_name="Deployment Name",
+                    field_type="text",
+                    prompt="Enter your Azure OpenAI deployment name",
+                    required=False,
+                ),
+            ],
         )
 
     async def list_models(self) -> list[ModelInfo]:
