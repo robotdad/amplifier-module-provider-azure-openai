@@ -99,8 +99,8 @@ async def mount(coordinator: ModuleCoordinator, config: dict[str, Any] | None = 
                 credential = ManagedIdentityCredential(client_id=managed_identity_client_id)
                 auth_summary = f"ManagedIdentityCredential (client_id={managed_identity_client_id})"
             else:
-                credential = ManagedIdentityCredential()
-                auth_summary = "ManagedIdentityCredential (system-assigned)"
+                credential = DefaultAzureCredential()
+                auth_summary = "DefaultAzureCredential (with managed identity preference)"
 
             sync_token_provider = get_bearer_token_provider(credential, "https://cognitiveservices.azure.com/.default")
 
